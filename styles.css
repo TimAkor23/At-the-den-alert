@@ -485,5 +485,21 @@ header {
         .demo-btn:hover {
             background: var(--gray);
             color: white;
+ /* Fix for random boxes in protocol steps */
+.protocol-steps {
+    list-style-type: decimal !important;
+    padding-left: 20px;
+}
+
+.protocol-steps li {
+    list-style-type: decimal !important;
+    display: list-item !important;
+}
+
+.protocol-steps li::before,
+.protocol-steps li::marker {
+    content: none !important;
+    display: none !important;
+}
         }
     </style>
