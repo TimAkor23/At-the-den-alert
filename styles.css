@@ -463,6 +463,10 @@ header {
             background: #ff5252;
         }
         
+
+}
+        }
+    </style>
         /* Toggle for demo */
         .demo-controls {
             display: flex;
@@ -500,6 +504,3 @@ header {
 .protocol-steps li::marker {
     content: none !important;
     display: none !important;
-}
-        }
-    </style>
