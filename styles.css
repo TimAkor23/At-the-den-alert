@@ -1,25 +1,5 @@
 <link rel="stylesheet" href="styles.css">
-       * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-        
-        :root {
-            --primary: #2a5ca9;
-            --primary-light: #4a7bc8;
-            --secondary: #e63946;
-            --secondary-light: #ff6b6b;
-            --safe: #2a9d8f;
-            --warning: #e9c46a;
-            --danger: #e63946;
-            --gray: #6c757d;
-            --gray-dark: #343a40;
-      
-            --shadow: 0 4px 12px rgba(0,0,0,0.08);
-            --radius: 12px;
-        }
+    
         
 /* =========================================
    DESIGN SYSTEM
