@@ -48,24 +48,67 @@
 }
 
 /* =========================================
-   GLOBAL RESET
+   DESIGN SYSTEM
+========================================= */
+:root {
+    --primary: #2a5ca9;
+    --primary-light: #4a7bc8;
+    --accent: #ff7a00;
+
+    --success: #2ecc71;
+    --warning: #e9c46a;
+    --danger: #e63946;
+
+    --gray-light: #e5e5e5;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+
+    --text-dark: #222;
+    --text-light: #555;
+    --bg-light: #f7f7f7;
+    --white: #fff;
+
+    --radius: 12px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* =========================================
+   GLOBAL RESET + BASE FONT
 ========================================= */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Inter", Arial, sans-serif;
 }
 
 body {
     background: var(--bg-light);
     color: var(--text-dark);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    line-height: 1.5;
 }
 
 .container {
     max-width: 1100px;
     margin: auto;
     padding: 20px;
+}
+
+/* =========================================
+   TYPOGRAPHY SYSTEM
+========================================= */
+h1, h2, h3 {
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+p, li {
+    font-weight: 400;
+}
+
+.section-title {
+    font-weight: 600;
+    font-size: 1.4rem;
 }
 
 /* =========================================
@@ -90,14 +133,6 @@ header {
     height: 70px;
     border-radius: 50%;
     object-fit: cover;
-}
-
-.logo-text h1 {
-    font-size: 1.8rem;
-}
-
-.logo-text p {
-    opacity: 0.9;
 }
 
 /* =========================================
@@ -125,19 +160,6 @@ header {
 }
 
 /* =========================================
-   SECTION TITLES
-========================================= */
-.section-title {
-    font-size: 1.4rem;
-    margin-top: 30px;
-    margin-bottom: 15px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* =========================================
    QUICK ACTIONS
 ========================================= */
 .quick-actions {
@@ -153,7 +175,7 @@ header {
     text-align: center;
     box-shadow: var(--shadow);
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: 0.2s ease;
 }
 
 .action-card:hover {
@@ -168,8 +190,13 @@ header {
 }
 
 /* =========================================
-   PROTOCOL CARDS
+   EMERGENCY PROTOCOLS — FONT FIX APPLIED
 ========================================= */
+.protocol-card,
+.protocol-card * {
+    font-family: "Segoe UI", system-ui, sans-serif !important;
+}
+
 .protocols {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -184,20 +211,27 @@ header {
 }
 
 .protocol-card h3 {
-    color: var(--primary);
+    font-weight: 700 !important;
+    font-size: 1.25rem;
+    margin-bottom: 5px;
+}
+
+.protocol-card p {
+    font-weight: 400 !important;
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
 }
 
 .protocol-steps {
     padding-left: 20px;
 }
 
-.step-number {
-    width: 10px;
-    height: 10px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
+.protocol-steps li {
+    font-weight: 500 !important;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    line-height: 1.45;
 }
 
 /* =========================================
@@ -252,12 +286,6 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
-}
-
-.update-time {
-    font-size: 0.8rem;
-    color: var(--text-light);
 }
 
 /* =========================================
@@ -277,17 +305,9 @@ header {
     color: white;
 }
 
-.btn-primary:hover {
-    background: var(--primary-light);
-}
-
 .btn-secondary {
     background: var(--gray-light);
     color: var(--gray-dark);
-}
-
-.btn-secondary:hover {
-    background: #e9ecef;
 }
 
 .btn-emergency {
@@ -295,12 +315,8 @@ header {
     color: white;
 }
 
-.btn-emergency:hover {
-    background: #ff5252;
-}
-
 /* =========================================
-   MODAL SYSTEM (Unified)
+   MODAL
 ========================================= */
 .modal-overlay {
     position: fixed;
@@ -363,10 +379,6 @@ header {
     }
 
     .update-item {
-        flex-direction: column;
-    }
-
-    .demo-controls {
         flex-direction: column;
     }
 }
