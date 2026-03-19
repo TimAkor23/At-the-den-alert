@@ -1,41 +1,389 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> At the Den - Emergency Communication App</title>
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
-       integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
-       crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <link rel="stylesheet" href="styles.css">
-</head>
-    
-    
+    <title>At the Den - Emergency Communication App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #041E42 0%, #0a2a5a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .logo-text h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status-banner {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .status-banner.warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .status-banner.danger {
+            background: linear-gradient(135deg, #e63946 0%, #c0392b 100%);
+        }
+
+        .section-title {
+            margin: 30px 0 20px;
+            font-size: 22px;
+            color: #041E42;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .action-card {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(4, 30, 66, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 28px;
+            color: #041E42;
+        }
+
+        .action-card h3 {
+            margin-bottom: 10px;
+            color: #041E42;
+        }
+
+        .action-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .protocols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .protocol-card {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .protocol-card h3 {
+            padding: 15px 20px;
+            margin: 0;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .protocol-card p {
+            padding: 10px 20px 5px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .protocol-card ol {
+            padding: 5px 20px 20px 40px;
+            margin: 0;
+            color: #333;
+        }
+
+        .protocol-card li {
+            margin-bottom: 8px;
+        }
+
+        .protocol-card.fire h3 {
+            background: #e63946;
+        }
+
+        .protocol-card.lockdown h3 {
+            background: #2c3e50;
+        }
+
+        .protocol-card.medical h3 {
+            background: #3498db;
+        }
+
+        .updates-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .update-badge {
+            background: #e63946;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .updates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .update-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .update-item.new {
+            border-left: 4px solid #e63946;
+        }
+
+        .update-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(4, 30, 66, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #041E42;
+        }
+
+        .update-content h4 {
+            margin-bottom: 5px;
+            color: #041E42;
+        }
+
+        .update-content p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .update-time {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .demo-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .demo-btn {
+            background: #041E42;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .demo-btn:hover {
+            background: #0a2a5a;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #ddd;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #e63946;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-header i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-body p {
+            margin-bottom: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-emergency {
+            background: #e63946;
+            color: white;
+        }
+    </style>
+</head>
 <body>
     <div class="container">
-    <header>
-        <div class="header-content">
-
-            <div class="logo">
-                <img src="at-the-den-logo.png"
-                     alt="At the Den Logo" 
-                     class="logo-icon">
-
-                <div class="logo-text">
-                    <h1>At the Den Alert</h1>
-                    <p>Lincoln University of Pennsylvania • Emergency Communication</p>
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>At the Den Alert</h1>
+                        <p>Lincoln University of Pennsylvania • Emergency Communication</p>
+                    </div>
                 </div>
+            </div>
+        </header>
 
-        </div>
-    </header>
-</div>
-
- 
-        
         <!-- Emergency Status Banner -->
         <div class="status-banner" id="statusBanner">
             <div class="status-info">
@@ -83,44 +431,42 @@
             </div>
         </div>
         
-       <!-- Emergency Protocols -->
-<h2 class="section-title"><i class="fa-solid fa-list-check"></i> Emergency Protocols</h2>
-<div class="protocols">
+        <!-- Emergency Protocols -->
+        <h2 class="section-title"><i class="fas fa-list-check"></i> Emergency Protocols</h2>
+        <div class="protocols">
+            <div class="protocol-card fire">
+                <h3><i class="fas fa-fire"></i> Fire Emergency</h3>
+                <p>Steps to follow in case of fire</p>
+                <ol class="protocol-steps">
+                    <li>Activate nearest fire alarm</li>
+                    <li>Evacuate using designated routes</li>
+                    <li>Assemble at football field</li>
+                    <li>Account for all students</li>
+                </ol>
+            </div>
 
-    <div class="protocol-card fire">
-        <h3><i class="fa-solid fa-fire"></i> Fire Emergency</h3>
-        <p>Steps to follow in case of fire</p>
-        <ol class="protocol-steps">
-            <li>Activate nearest fire alarm</li>
-            <li>Evacuate using designated routes</li>
-            <li>Assemble at football field</li>
-            <li>Account for all students</li>
-        </ol>
-    </div>
+            <div class="protocol-card lockdown">
+                <h3><i class="fas fa-lock"></i> Lockdown Procedure</h3>
+                <p>Steps for security lockdown</p>
+                <ol class="protocol-steps">
+                    <li>Lock all doors and windows</li>
+                    <li>Move students out of sight</li>
+                    <li>Silence all devices</li>
+                    <li>Wait for all-clear signal</li>
+                </ol>
+            </div>
 
-    <div class="protocol-card lockdown">
-        <h3><i class="fa-solid fa-lock"></i> Lockdown Procedure</h3>
-        <p>Steps for security lockdown</p>
-        <ol class="protocol-steps">
-            <li>Lock all doors and windows</li>
-            <li>Move students out of sight</li>
-            <li>Silence all devices</li>
-            <li>Wait for all-clear signal</li>
-        </ol>
-    </div>
-
-    <div class="protocol-card medical">
-        <h3><i class="fa-solid fa-notes-medical"></i> Medical Emergency</h3>
-        <p>Responding to health crises</p>
-        <ol class="protocol-steps">
-            <li>Call school nurse (ext. 555)</li>
-            <li>Administer first aid if trained</li>
-            <li>Clear area around patient</li>
-            <li>Await medical professionals</li>
-        </ol>
-    </div>
-
-</div>
+            <div class="protocol-card medical">
+                <h3><i class="fas fa-heart-pulse"></i> Medical Emergency</h3>
+                <p>Responding to health crises</p>
+                <ol class="protocol-steps">
+                    <li>Call school nurse (ext. 555)</li>
+                    <li>Administer first aid if trained</li>
+                    <li>Clear area around patient</li>
+                    <li>Await medical professionals</li>
+                </ol>
+            </div>
+        </div>
 
         <!-- Live Updates -->
         <div class="updates-container">
@@ -245,7 +591,7 @@
             const newUpdate = document.createElement('div');
             newUpdate.className = 'update-item new';
             newUpdate.innerHTML = `
-                <div class="update-icon" style="background: rgba(230, 57, 70, 0.1); color: var(--danger);">
+                <div class="update-icon" style="background: rgba(230, 57, 70, 0.1); color: #e63946;">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
                 <div class="update-content">
@@ -348,9 +694,6 @@
                 closeModal();
             }
         }
-
-
-
     </script>
 </body>
 </html>
