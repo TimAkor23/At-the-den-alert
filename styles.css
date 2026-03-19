@@ -22,12 +22,9 @@
             --radius: 12px;
         }
         
-        /* =========================================
+/* =========================================
    DESIGN SYSTEM
 ========================================= */
-/* --------------------------------------------------
-   DESIGN SYSTEM
--------------------------------------------------- */
 :root {
     --primary: #2a5ca9;
     --primary-light: #4a7bc8;
@@ -36,6 +33,10 @@
     --success: #2ecc71;
     --warning: #e9c46a;
     --danger: #e63946;
+
+    --gray-light: #e5e5e5;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
 
     --text-dark: #222;
     --text-light: #555;
@@ -46,12 +47,17 @@
     --shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* --------------------------------------------------
-   GLOBAL STYLES
--------------------------------------------------- */
-body {
+/* =========================================
+   GLOBAL RESET
+========================================= */
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     font-family: "Inter", Arial, sans-serif;
+}
+
+body {
     background: var(--bg-light);
     color: var(--text-dark);
 }
@@ -62,9 +68,9 @@ body {
     padding: 20px;
 }
 
-/* --------------------------------------------------
+/* =========================================
    HEADER
--------------------------------------------------- */
+========================================= */
 header {
     background: var(--primary);
     padding: 20px;
@@ -87,18 +93,16 @@ header {
 }
 
 .logo-text h1 {
-    margin: 0;
     font-size: 1.8rem;
 }
 
 .logo-text p {
-    margin: 0;
     opacity: 0.9;
 }
 
-/* --------------------------------------------------
+/* =========================================
    STATUS BANNER
--------------------------------------------------- */
+========================================= */
 .status-banner {
     background: var(--success);
     color: white;
@@ -120,9 +124,9 @@ header {
     background: var(--danger);
 }
 
-/* --------------------------------------------------
+/* =========================================
    SECTION TITLES
--------------------------------------------------- */
+========================================= */
 .section-title {
     font-size: 1.4rem;
     margin-top: 30px;
@@ -133,9 +137,9 @@ header {
     gap: 8px;
 }
 
-/* --------------------------------------------------
+/* =========================================
    QUICK ACTIONS
--------------------------------------------------- */
+========================================= */
 .quick-actions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -163,9 +167,9 @@ header {
     color: var(--primary);
 }
 
-/* --------------------------------------------------
+/* =========================================
    PROTOCOL CARDS
--------------------------------------------------- */
+========================================= */
 .protocols {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -180,7 +184,6 @@ header {
 }
 
 .protocol-card h3 {
-    margin-top: 0;
     color: var(--primary);
 }
 
@@ -189,17 +192,17 @@ header {
 }
 
 .step-number {
-    display: inline-block;
     width: 10px;
     height: 10px;
     background: var(--primary);
     border-radius: 50%;
+    display: inline-block;
     margin-right: 8px;
 }
 
-/* --------------------------------------------------
+/* =========================================
    LIVE UPDATES
--------------------------------------------------- */
+========================================= */
 .updates-container {
     background: white;
     padding: 20px;
@@ -252,97 +255,39 @@ header {
     font-size: 1.3rem;
 }
 
-.update-content h4 {
-    margin: 0;
-}
-
 .update-time {
     font-size: 0.8rem;
     color: var(--text-light);
 }
 
-/* --------------------------------------------------
-   DEMO CONTROLS
--------------------------------------------------- */
-.demo-controls {
-    margin-top: 30px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+/* =========================================
+   BUTTONS
+========================================= */
+.btn {
+    padding: 12px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s ease;
 }
 
-.demo-btn {
-    flex: 1;
-    padding: 12px;
+.btn-primary {
     background: var(--primary);
     color: white;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background 0.2s ease;
 }
 
-.demo-btn:hover {
+.btn-primary:hover {
     background: var(--primary-light);
 }
 
-/* --------------------------------------------------
-   FOOTER
--------------------------------------------------- */
-footer {
-    text-align: center;
-    margin-top: 40px;
-    color: var(--text-light);
-}
-
-/* --------------------------------------------------
-   MODAL
--------------------------------------------------- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal {
-    background: white;
-    padding: 25px;
-    border-radius: var(--radius);
-    width: 90%;
-    max-width: 450px;
-    box-shadow: var(--shadow);
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--danger);
-}
-
-.modal-buttons {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-}
-
-.btn {
-    flex: 1;
-    padding: 12px;
-    border-radius: var(--radius);
-    border: none;
-    cursor: pointer;
-}
-
 .btn-secondary {
-    background: #ddd;
+    background: var(--gray-light);
+    color: var(--gray-dark);
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
 }
 
 .btn-emergency {
@@ -350,17 +295,61 @@ footer {
     color: white;
 }
 
-/* --------------------------------------------------
+.btn-emergency:hover {
+    background: #ff5252;
+}
+
+/* =========================================
+   MODAL SYSTEM (Unified)
+========================================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease-out;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: var(--danger);
+    color: white;
+    padding: 25px;
+    text-align: center;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+/* =========================================
    ANIMATIONS
--------------------------------------------------- */
+========================================= */
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
 
-/* --------------------------------------------------
-   RESPONSIVE DESIGN
--------------------------------------------------- */
+/* =========================================
+   RESPONSIVE
+========================================= */
 @media (max-width: 600px) {
     .header-content {
         flex-direction: column;
