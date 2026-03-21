@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>At the Den - Emergency Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        :root {
+            --primary: #2a5ca9;
+            --primary-light: #4a7bc8;
+            --success: #2ecc71;
+            --warning: #e9c46a;
+            --danger: #e63946;
+            --gray-light: #e5e5e5;
+            --gray: #6c757d;
+            --text-dark: #222;
+            --bg-light: #f7f7f7;
+            --white: #fff;
+            --radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        body {
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        header {
+            background: var(--primary);
+            padding: 20px;
+            border-radius: var(--radius);
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        /* Status Banner */
+        .status-banner {
+            background: var(--success);
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .status-banner.warning {
+            background: var(--warning);
+            color: #5a4500;
+        }
+        
+        .status-banner.danger {
+            background: var(--danger);
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .action-card {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+        
+        .action-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        /* Sections */
+        .section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--gray-light);
+            padding-bottom: 10px;
+        }
+        
+        /* Emergency List */
+        .emergency-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .emergency-item {
+            background: var(--bg-light);
+            border-radius: var(--radius);
+            padding: 15px;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .emergency-type {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .emergency-location {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .emergency-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        /* Contacts Grid */
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .contact-card {
+            background: var(--bg-light);
+            border-radius: var(--radius);
+            padding: 15px;
+            transition: transform 0.2s ease;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .contact-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .contact-phone {
+            color: var(--primary);
+            margin: 5px 0;
+        }
+        
+        .contact-notes {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        .call-btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+        }
+        
+        .modal input, .modal select, .modal textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 5px;
+        }
+        
+        .modal button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modal button.danger {
+            background: var(--danger);
+        }
+        
+        /* Login Form */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 5px;
+        }
+        
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .success {
+            color: var(--success);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .quick-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+            .contacts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginContainer" class="login-container">
+        <h2><i class="fas fa-shield-alt"></i> At the Den</h2>
+        <h3>Emergency Communication System</h3>
+        <input type="email" id="loginEmail" placeholder="Email" value="test@lincoln.edu">
+        <input type="password" id="loginPassword" placeholder="Password" value="password123">
+        <button onclick="login()">Login</button>
+        <div id="loginError" class="error"></div>
+        <p style="text-align: center; margin-top: 15px; font-size: 0.8rem;">
+            <a href="#" onclick="showRegister()">Don't have an account? Register</a>
+        </p>
+    </div>
+    
+    <div id="registerContainer" class="login-container hidden">
+        <h2><i class="fas fa-user-plus"></i> Register</h2>
+        <input type="text" id="regName" placeholder="Full Name">
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPassword" placeholder="Password">
+        <select id="regRole">
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+        </select>
+        <button onclick="register()">Register</button>
+        <div id="registerError" class="error"></div>
+        <p style="text-align: center; margin-top: 15px;">
+            <a href="#" onclick="showLogin()">Back to Login</a>
+        </p>
+    </div>
+    
+    <div id="mainApp" class="container hidden">
+        <header>
+            <div class="header-content">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-haltered"></i>
+                </div>
+                <div>
+                    <h1>At the Den Alert</h1>
+                    <p>Lincoln University of Pennsylvania • Emergency Communication</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="status-banner" id="statusBanner">
+            <div>
+                <h2>All Clear</h2>
+                <p>No active emergencies. Campus is secure.</p>
+            </div>
+            <div>
+                Last updated: <span id="currentTime"></span>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <div class="action-card" onclick="openReportEmergency()">
+                <div class="action-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <h3>Report Emergency</h3>
+                <p>Immediately notify officials</p>
+            </div>
+            <div class="action-card" onclick="openCheckIn()">
+                <div class="action-icon"><i class="fas fa-user-check"></i></div>
+                <h3>Check-In Safe</h3>
+                <p>Confirm your safety status</p>
+            </div>
+            <div class="action-card" onclick="openShareLocation()">
+                <div class="action-icon"><i class="fas fa-map-marker-alt"></i></div>
+                <h3>Share Location</h3>
+                <p>Provide your current location</p>
+            </div>
+            <div class="action-card" onclick="openAddContact()">
+                <div class="action-icon"><i class="fas fa-address-book"></i></div>
+                <h3>Add Contact</h3>
+                <p>Save emergency contact</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-broadcast-tower"></i> Active Emergencies</h2>
+            <div id="activeEmergencies" class="emergency-list">
+                <p>Loading emergencies...</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-phone-alt"></i> Emergency Contacts</h2>
+            <div id="contactsList" class="contacts-grid">
+                <p>Loading contacts...</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-history"></i> My Check-Ins</h2>
+            <div id="checkInsList">
+                <p>Loading check-ins...</p>
+            </div>
+        </div>
+        
+        <footer style="text-align: center; padding: 20px; color: var(--gray);">
+            <p>At the Den Emergency Alert System • Lincoln University</p>
+        </footer>
+    </div>
+    
+    <!-- Report Emergency Modal -->
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal">
+            <h2><i class="fas fa-exclamation-triangle"></i> Report Emergency</h2>
+            <select id="emergencyType">
+                <option value="fire">🔥 Fire</option>
+                <option value="medical">🏥 Medical</option>
+                <option value="lockdown">🔒 Lockdown</option>
+                <option value="weather">🌩️ Weather</option>
+                <option value="active-threat">⚠️ Active Threat</option>
+                <option value="other">📢 Other</option>
+            </select>
+            <input type="text" id="emergencyLocation" placeholder="Location (Building/Room)">
+            <textarea id="emergencyDescription" rows="3" placeholder="Describe what's happening..."></textarea>
+            <button onclick="submitEmergency()">Report Emergency</button>
+            <button class="danger" onclick="closeModal('reportModal')">Cancel</button>
+        </div>
+    </div>
+    
+    <!-- Check-In Modal -->
+    <div id="checkInModal" class="modal-overlay">
+        <div class="modal">
+            <h2><i class="fas fa-user-check"></i> Check-In Safe</h2>
+            <select id="checkInStatus">
+                <option value="safe">✅ I am Safe</option>
+                <option value="help-needed">🆘 I Need Help</option>
+                <option value="evacuated">🚶 I Have Evacuated</option>
+            </select>
+            <input type="text" id="checkInLocation" placeholder="Your Location (Building/Room)">
+            <textarea id="checkInMessage" rows="2" placeholder="Optional message..."></textarea>
+            <button onclick="submitCheckIn()">Check In</button>
+            <button class="danger" onclick="closeModal('checkInModal')">Cancel</button>
+        </div>
+    </div>
+    
+    <!-- Share Location Modal -->
+    <div id="locationModal" class="modal-overlay">
+        <div class="modal">
+            <h2><i class="fas fa-map-marker-alt"></i> Share Location</h2>
+            <p>Your current location will be shared with authorities.</p>
+            <input type="text" id="locationName" placeholder="Location Name (e.g., Science Building)">
+            <button onclick="shareLocation()">Share My Location</button>
+            <button class="danger" onclick="closeModal('locationModal')">Cancel</button>
+        </div>
+    </div>
+    
+    <!-- Add Contact Modal -->
+    <div id="addContactModal" class="modal-overlay">
+        <div class="modal">
+            <h2><i class="fas fa-user-plus"></i> Add Emergency Contact</h2>
+            <input type="text" id="contactName" placeholder="Full Name">
+            <input type="tel" id="contactPhone" placeholder="Phone Number">
+            <input type="email" id="contactEmail" placeholder="Email (optional)">
+            <select id="contactRelationship">
+                <option value="parent">Parent</option>
+                <option value="guardian">Guardian</option>
+                <option value="spouse">Spouse</option>
+                <option value="sibling">Sibling</option>
+                <option value="friend">Friend</option>
+                <option value="doctor">Doctor</option>
+                <option value="other">Other</option>
+            </select>
+            <button onclick="addEmergencyContact()">Add Contact</button>
+            <button class="danger" onclick="closeModal('addContactModal')">Cancel</button>
+        </div>
+    </div>
+    
+    <script>
+        let authToken = localStorage.getItem('token');
+        const API_BASE = 'http://localhost:5000/api';
+        
+        // Update time
+        function updateTime() {
+            document.getElementById('currentTime').innerText = new Date().toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // ============ AUTHENTICATION ============
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.token;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('user', JSON.stringify(data.data));
+                    showMainApp();
+                    loadDashboardData();
+                } else {
+                    document.getElementById('loginError').innerText = data.error;
+                }
+            } catch (error) {
+                document.getElementById('loginError').innerText = 'Connection error. Is the server running?';
+            }
+        }
+        
+        async function register() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showLogin();
+                    document.getElementById('loginError').innerText = 'Registration successful! Please login.';
+                } else {
+                    document.getElementById('registerError').innerText = data.error;
+                }
+            } catch (error) {
+                document.getElementById('registerError').innerText = 'Connection error';
+            }
+        }
+        
+        function showMainApp() {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('registerContainer').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+        }
+        
+        function showLogin() {
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('registerContainer').classList.add('hidden');
+            document.getElementById('loginError').innerText = '';
+        }
+        
+        function showRegister() {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('registerContainer').classList.remove('hidden');
+            document.getElementById('registerError').innerText = '';
+        }
+        
+        // ============ LOAD DASHBOARD DATA ============
+        async function loadDashboardData() {
+            await loadActiveEmergencies();
+            await loadContacts();
+            await loadMyCheckIns();
+        }
+        
+        async function loadActiveEmergencies() {
+            try {
+                const response = await fetch(`${API_BASE}/emergency/active`);
+                const data = await response.json();
+                
+                const container = document.getElementById('activeEmergencies');
+                if (data.success && data.count > 0) {
+                    container.innerHTML = data.data.map(emergency => `
+                        <div class="emergency-item">
+                            <div class="emergency-type">🚨 ${emergency.type.toUpperCase()} Emergency</div>
+                            <div class="emergency-location">📍 ${emergency.location.name}</div>
+                            <div class="emergency-time">🕐 ${new Date(emergency.createdAt).toLocaleString()}</div>
+                            <div>${emergency.description}</div>
+                        </div>
+                    `).join('');
+                    
+                    // Update status banner if emergency active
+                    document.getElementById('statusBanner').className = 'status-banner danger';
+                    document.getElementById('statusBanner').innerHTML = `
+                        <div><h2>⚠️ ACTIVE EMERGENCY</h2><p>Follow safety protocols</p></div>
+                        <div>Last updated: <span id="currentTime"></span></div>
+                    `;
+                } else {
+                    container.innerHTML = '<p>✅ No active emergencies. Campus is secure.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading emergencies:', error);
+            }
+        }
+        
+        async function loadContacts() {
+            try {
+                const response = await fetch(`${API_BASE}/emergency/contacts`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('contactsList');
+                if (data.success) {
+                    const allContacts = [...data.data.personal, ...data.data.public];
+                    if (allContacts.length > 0) {
+                        container.innerHTML = allContacts.map(contact => `
+                            <div class="contact-card">
+                                <div class="contact-name">${contact.name}</div>
+                                <div class="contact-phone"><i class="fas fa-phone"></i> ${contact.phone}</div>
+                                ${contact.email ? `<div><i class="fas fa-envelope"></i> ${contact.email}</div>` : ''}
+                                ${contact.notes ? `<div class="contact-notes">📝 ${contact.notes}</div>` : ''}
+                                <a href="tel:${contact.phone}" class="call-btn"><i class="fas fa-phone-alt"></i> Call</a>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<p>No contacts saved. Add one using the button above.</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+        
+        async function loadMyCheckIns() {
+            try {
+                const response = await fetch(`${API_BASE}/emergency/checkins/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('checkInsList');
+                if (data.success && data.count > 0) {
+                    container.innerHTML = data.data.map(checkIn => `
+                        <div style="padding: 10px; border-bottom: 1px solid #e5e5e5;">
+                            <span>${checkIn.status === 'safe' ? '✅' : checkIn.status === 'help-needed' ? '🆘' : '🚶'}</span>
+                            ${new Date(checkIn.createdAt).toLocaleString()}
+                            ${checkIn.location?.name ? ` at ${checkIn.location.name}` : ''}
+                            ${checkIn.message ? ` - ${checkIn.message}` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p>No check-ins yet. Use the Check-In button above.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading check-ins:', error);
+            }
+        }
+        
+        // ============ MODAL FUNCTIONS ============
+        function openReportEmergency() { openModal('reportModal'); }
+        function openCheckIn() { openModal('checkInModal'); }
+        function openShareLocation() { openModal('locationModal'); }
+        function openAddContact() { openModal('addContactModal'); }
+        
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        // ============ API CALLS ============
+        async function submitEmergency() {
+            const type = document.getElementById('emergencyType').value;
+            const location = { name: document.getElementById('emergencyLocation').value };
+            const description = document.getElementById('emergencyDescription').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/emergency/report`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ type, location, description, severity: 5 })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Emergency reported successfully!');
+                    closeModal('reportModal');
+                    loadActiveEmergencies();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+        
+        async function submitCheckIn() {
+            const status = document.getElementById('checkInStatus').value;
+            const location = { name: document.getElementById('checkInLocation').value };
+            const message = document.getElementById('checkInMessage').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/emergency/checkin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status, location, message })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Check-in successful! You are marked as safe.');
+                    closeModal('checkInModal');
+                    loadMyCheckIns();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+        
+        async function shareLocation() {
+            const locationName = document.getElementById('locationName').value;
+            
+            // Get GPS coordinates if available
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const coordinates = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    
+                    try {
+                        const response = await fetch(`${API_BASE}/emergency/location`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                coordinates,
+                                location: { name: locationName },
+                                shareWith: 'authorities'
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        if (data.success) {
+                            alert('Location shared successfully!');
+                            closeModal('locationModal');
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    } catch (error) {
+                        alert('Connection error');
+                    }
+                });
+            } else {
+                alert('Geolocation not supported');
+            }
+        }
+        
+        async function addEmergencyContact() {
+            const name = document.getElementById('contactName').value;
+            const phone = document.getElementById('contactPhone').value;
+            const email = document.getElementById('contactEmail').value;
+            const relationship = document.getElementById('contactRelationship').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/emergency/contacts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, phone, email, relationship })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Contact added successfully!');
+                    closeModal('addContactModal');
+                    loadContacts();
+                    document.getElementById('contactName').value = '';
+                    document.getElementById('contactPhone').value = '';
+                    document.getElementById('contactEmail').value = '';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+        
+        // Check if user is already logged in
+        if (authToken) {
+            showMainApp();
+            loadDashboardData();
+        }
+    </script>
+</body>
+</html>
