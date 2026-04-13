@@ -1,0 +1,66 @@
+{
+  "fire": {
+    "name": "Fire Emergency",
+    "steps": [
+      "Activate the nearest fire alarm",
+      "Evacuate immediately using stairs (not elevators)",
+      "Close doors behind you to contain the fire",
+      "Assemble at the designated meeting point (football field)",
+      "Call Campus Security: 484-365-8139",
+      "Account for all students and staff"
+    ],
+    "doNot": [
+      "Use elevators",
+      "Re-enter building until cleared by authorities",
+      "Ignore fire alarms"
+    ]
+  },
+  "lockdown": {
+    "name": "Lockdown Procedure",
+    "steps": [
+      "Lock all doors and windows immediately",
+      "Turn off lights and close blinds",
+      "Move students out of sight lines from windows",
+      "Silence all electronic devices",
+      "Stay quiet and wait for official all-clear",
+      "Do NOT open doors for anyone until confirmed by authorities"
+    ],
+    "doNot": [
+      "Open doors for unknown individuals",
+      "Make noise",
+      "Use phones (text only if necessary)"
+    ]
+  },
+  "medical": {
+    "name": "Medical Emergency",
+    "steps": [
+      "Call 911 for life-threatening emergencies",
+      "Call Health Services: 484-365-6196",
+      "Do NOT move the person unless they're in immediate danger",
+      "Check for responsiveness and breathing",
+      "Provide first aid only if properly trained",
+      "Clear the area and wait for medical professionals"
+    ],
+    "doNot": [
+      "Move patient unless necessary",
+      "Give food/drink if unconscious",
+      "Leave the person alone"
+    ]
+  },
+  "weather": {
+    "name": "Severe Weather",
+    "steps": [
+      "Move to interior rooms or basement immediately",
+      "Stay away from windows, skylights, and glass doors",
+      "Take shelter in a small interior room or hallway",
+      "Monitor official announcements via emergency alerts",
+      "Wait for all-clear before leaving shelter",
+      "Avoid using elevators during power outages"
+    ],
+    "doNot": [
+      "Go outside during the storm",
+      "Stand near windows",
+      "Use electrical equipment during lightning"
+    ]
+  }
+}

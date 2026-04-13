@@ -1,0 +1,15 @@
+# Environment variables (YOUR API KEYS - MOST IMPORTANT!)
+.env
+
+# Dependencies (these are huge folders, don't commit)
+node_modules/
+
+# OS junk files (Windows creates these)
+Thumbs.db
+desktop.ini
+
+# Log files (if any appear)
+*.log
+
+# IDE files (if you use VS Code)
+.vscode/
