@@ -609,601 +609,569 @@
         </div>
     </div>
     
-    <script>
-        const https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth = 'https://at-the-den-alert.onrender.com';
-        let refreshInterval;
-        let broadcasts = [];
-        let currentImageData = null;
+   <script>
+    const API_BASE = 'https://at-the-den-alert.onrender.com/api';
+    let refreshInterval;
+    let broadcasts = [];
+    let currentImageData = null;
+    
+    function getToken() { return localStorage.getItem('token'); }
+    
+    // ============ AUTHENTICATION ============
+    async function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
         
-        function getToken() { return localStorage.getItem('token'); }
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.data));
+                document.getElementById('userName').innerText = data.data.name || 'Student';
+                showDashboard();
+                loadAllData();
+                startAutoRefresh();
+            } else {
+                errorDiv.innerText = data.error;
+                errorDiv.style.display = 'block';
+            }
+        } catch (err) {
+            errorDiv.innerText = 'Connection error: ' + err.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+    
+    async function register() {
+        const name = document.getElementById('regName').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const errorDiv = document.getElementById('registerError');
         
-        // ============ AUTHENTICATION ============
-        async function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+        if (password.length < 6) {
+            errorDiv.innerText = 'Password must be at least 6 characters';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, role: 'student' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Registration successful! Please login.');
+                showLogin();
+            } else {
+                errorDiv.innerText = data.error;
+                errorDiv.style.display = 'block';
+            }
+        } catch (err) {
+            errorDiv.innerText = 'Connection error: ' + err.message;
+            errorDiv.style.display = 'block';
+        }
+    }
+    
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        document.getElementById('dashboardPage').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('registerPage').classList.add('hidden');
+        if (refreshInterval) clearInterval(refreshInterval);
+    }
+    
+    function showDashboard() {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('registerPage').classList.add('hidden');
+        document.getElementById('dashboardPage').classList.remove('hidden');
+        updateTime();
+        setInterval(updateTime, 1000);
+    }
+    
+    function showLogin() {
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('registerPage').classList.add('hidden');
+        document.getElementById('loginError').innerText = '';
+    }
+    
+    function showRegister() {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('registerPage').classList.remove('hidden');
+        document.getElementById('registerError').innerText = '';
+    }
+    
+    function updateTime() {
+        const el = document.getElementById('currentTime');
+        if (el) el.innerText = new Date().toLocaleTimeString();
+    }
+    
+    // ============ BROADCAST FUNCTIONS ============
+    async function fetchBroadcasts() {
+        const token = getToken();
+        if (!token) return;
+        try {
+            console.log('📡 Fetching broadcasts...');
+            const res = await fetch(`${API_BASE}/emergency/broadcasts`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await res.json();
+            console.log('Broadcasts response:', result);
+            if (result.success) {
+                broadcasts = result.data;
+                displayBroadcasts(broadcasts);
+                updateUnreadCount(result.unreadCount);
+            }
+        } catch (err) {
+            console.error('Broadcast error:', err);
+        }
+    }
+    
+    function displayBroadcasts(list) {
+        const container = document.getElementById('broadcastsList');
+        if (!list || list.length === 0) {
+            container.innerHTML = '<div class="empty-broadcasts"><i class="fas fa-inbox"></i><p>No announcements at this time</p></div>';
+            return;
+        }
+        container.innerHTML = list.map(b => `
+            <div class="broadcast-card ${b.isRead ? 'read' : 'unread'} ${b.priority}" onclick="markBroadcastRead('${b._id}', this)">
+                <div class="broadcast-header">
+                    <span class="broadcast-title">${escapeHtml(b.title)}${!b.isRead ? '<span class="unread-indicator"></span>' : ''}</span>
+                    <span class="broadcast-priority">${b.priority.toUpperCase()}</span>
+                </div>
+                <div class="broadcast-message">${escapeHtml(b.message)}</div>
+                <div class="broadcast-time"><i class="far fa-clock"></i> ${formatTime(b.createdAt)} • ${escapeHtml(b.author) || 'Admin'}</div>
+            </div>
+        `).join('');
+    }
+    
+    async function markBroadcastRead(id, element) {
+        const token = getToken();
+        try {
+            const res = await fetch(`${API_BASE}/emergency/broadcasts/${id}/read`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await res.json();
+            if (result.success) {
+                element.classList.remove('unread');
+                element.classList.add('read');
+                const indicator = element.querySelector('.unread-indicator');
+                if (indicator) indicator.remove();
+                const broadcast = broadcasts.find(b => b._id === id);
+                if (broadcast) broadcast.isRead = true;
+                const newCount = broadcasts.filter(b => !b.isRead).length;
+                updateUnreadCount(newCount);
+            }
+        } catch (err) { console.error(err); }
+    }
+    
+    function updateUnreadCount(count) {
+        const badge = document.getElementById('unreadCount');
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+        document.title = count > 0 ? `(${count}) At the Den` : 'At the Den';
+    }
+    
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMins = Math.floor((now - date) / 60000);
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hour${Math.floor(diffMins / 60) > 1 ? 's' : ''} ago`;
+        return date.toLocaleDateString();
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // ============ AI CHAT WIDGET FUNCTIONS ============
+    function toggleAIChat() {
+        const chatWindow = document.getElementById('aiChatWindow');
+        if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+            chatWindow.style.display = 'flex';
+        } else {
+            chatWindow.style.display = 'none';
+        }
+    }
+    
+    function triggerImageUpload() {
+        document.getElementById('aiImageInput').click();
+    }
+    
+    async function processImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewArea = document.getElementById('imagePreviewArea');
+            previewArea.style.display = 'block';
+            previewArea.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="${e.target.result}" class="image-preview">
+                    <span>Image ready to send</span>
+                    <button onclick="clearImage()" style="margin-left: auto; background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">✕</button>
+                </div>
+            `;
+            currentImageData = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function clearImage() {
+        currentImageData = null;
+        document.getElementById('imagePreviewArea').style.display = 'none';
+        document.getElementById('imagePreviewArea').innerHTML = '';
+        document.getElementById('aiImageInput').value = '';
+    }
+    
+    function triggerVoiceInput() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            
+            recognition.onstart = function() {
+                showToast('🎤 Listening... Speak now');
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('aiChatInput').value = transcript;
+                sendAIMessage();
+            };
+            
+            recognition.onerror = function() {
+                showToast('Voice recognition error. Please try again.');
+            };
+            
+            recognition.start();
+        } else {
+            showToast('Voice input not supported in this browser');
+        }
+    }
+    
+    async function sendAIMessage() {
+        const input = document.getElementById('aiChatInput');
+        const message = input.value.trim();
+        
+        if (!message && !currentImageData) {
+            showToast('Please enter a message or upload an image');
+            return;
+        }
+        
+        const chatMessages = document.getElementById('aiChatMessages');
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'user-message';
+        
+        let userContent = `<div>`;
+        if (message) {
+            userContent += `${escapeHtml(message)}`;
+        }
+        if (currentImageData) {
+            userContent += `<br><img src="${currentImageData}" style="max-width: 150px; border-radius: 8px; margin-top: 5px;">`;
+        }
+        userContent += `</div>`;
+        userMessageDiv.innerHTML = userContent;
+        chatMessages.appendChild(userMessageDiv);
+        
+        input.value = '';
+        const imageToSend = currentImageData;
+        clearImage();
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = '<span></span><span></span><span></span>';
+        typingDiv.id = 'typingIndicator';
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        try {
+            const token = getToken();
+            const requestBody = { message: message || "What's in this image?" };
+            if (imageToSend) {
+                requestBody.image = imageToSend;
+            }
+            
+            const response = await fetch(`${API_BASE}/ai/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            document.getElementById('typingIndicator')?.remove();
+            
+            const aiMessageDiv = document.createElement('div');
+            aiMessageDiv.className = 'ai-message';
+            let aiResponseText = data.response || "I'm here to help!";
+            aiMessageDiv.innerHTML = `<div><i class="fas fa-robot"></i> ${escapeHtml(aiResponseText)}</div>`;
+            chatMessages.appendChild(aiMessageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch (error) {
+            console.error('AI Error:', error);
+            document.getElementById('typingIndicator')?.remove();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'ai-message';
+            errorDiv.innerHTML = `<div style="background: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Connection error. Please try again.</div>`;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+    
+    // ============ LOAD DATA ============
+    async function loadAllData() {
+        await fetchBroadcasts();
+        await loadActiveEmergencies();
+        await loadContacts();
+        await loadMyCheckIns();
+    }
+    
+    async function refreshAllData() {
+        await loadAllData();
+        showToast('Data refreshed!');
+    }
+    
+    async function loadActiveEmergencies() {
+        try {
+            const res = await fetch(`${API_BASE}/emergency/active`);
+            const data = await res.json();
+            const container = document.getElementById('activeEmergencies');
+            if (data.success && data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(e => `
+                    <div class="emergency-item">
+                        <strong>🚨 ${e.type.toUpperCase()} Emergency</strong><br>
+                        📍 ${e.location?.name || 'Unknown'}<br>
+                        🕐 ${new Date(e.createdAt).toLocaleString()}<br>
+                        ${e.description || ''}
+                    </div>
+                `).join('');
+                const banner = document.getElementById('statusBanner');
+                banner.className = 'status-banner danger';
+                banner.innerHTML = `<div><h2><i class="fas fa-exclamation-triangle"></i> ACTIVE EMERGENCY</h2><p>Follow safety protocols</p></div><div>Updated: ${new Date().toLocaleTimeString()}</div>`;
+            } else {
+                container.innerHTML = '<p>✅ No active emergencies. Campus is secure.</p>';
+                document.getElementById('statusBanner').className = 'status-banner';
+            }
+        } catch (err) { console.error(err); }
+    }
+    
+    async function loadContacts() {
+        const token = getToken();
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE}/emergency/contacts`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const container = document.getElementById('contactsList');
+            if (data.success && data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(c => `
+                    <div class="contact-card">
+                        <strong>${escapeHtml(c.name)}</strong><br>
+                        📞 ${c.phone}<br>
+                        ${c.relationship ? `👤 ${c.relationship}` : ''}<br>
+                        <a href="tel:${c.phone}" style="color: var(--primary); text-decoration: none;">📱 Call Now</a>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p>No contacts saved. Use "Add Contact" above.</p>';
+            }
+        } catch (err) { console.error(err); }
+    }
+    
+    async function loadMyCheckIns() {
+        const token = getToken();
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE}/emergency/checkins/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const container = document.getElementById('checkInsList');
+            if (data.success && data.data && data.data.length > 0) {
+                container.innerHTML = data.data.map(c => `
+                    <div class="checkin-item">
+                        <div>${c.status === 'safe' ? '✅' : c.status === 'help-needed' ? '🆘' : '🚶'}</div>
+                        <div>
+                            <strong>${c.status === 'safe' ? 'Safe' : c.status === 'help-needed' ? 'Need Help' : 'Evacuated'}</strong><br>
+                            📍 ${c.location?.name || 'Unknown'}<br>
+                            ${c.message ? `📝 ${c.message}<br>` : ''}
+                            <small>${new Date(c.createdAt).toLocaleString()}</small>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p>No check-ins yet. Use "Check-In Safe" above.</p>';
+            }
+        } catch (err) { console.error(err); }
+    }
+    
+    // ============ MODAL FUNCTIONS ============
+    function openReportEmergency() { openModal('reportModal'); }
+    function openCheckIn() { openModal('checkInModal'); }
+    function openShareLocation() { openModal('locationModal'); }
+    function openAddContact() { openModal('addContactModal'); }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    
+    // ============ API ACTIONS ============
+    async function submitEmergency() {
+        const token = getToken();
+        const type = document.getElementById('emergencyType').value;
+        const location = document.getElementById('emergencyLocation').value;
+        const description = document.getElementById('emergencyDescription').value;
+        if (!location) { alert('Please enter a location'); return; }
+        try {
+            const res = await fetch(`${API_BASE}/emergency/report`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ type, location: { name: location }, description, severity: 'high' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ Emergency reported successfully!');
+                closeModal('reportModal');
+                loadActiveEmergencies();
+                document.getElementById('emergencyLocation').value = '';
+                document.getElementById('emergencyDescription').value = '';
+            } else { alert('Error: ' + (data.error || 'Unknown error')); }
+        } catch (err) { alert('Connection error'); }
+    }
+    
+    async function submitCheckIn() {
+        const token = getToken();
+        const status = document.getElementById('checkInStatus').value;
+        const location = document.getElementById('checkInLocation').value;
+        const message = document.getElementById('checkInMessage').value;
+        try {
+            const res = await fetch(`${API_BASE}/emergency/checkin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ status, location: { name: location || 'Unknown' }, message })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ Check-in successful!');
+                closeModal('checkInModal');
+                loadMyCheckIns();
+                document.getElementById('checkInLocation').value = '';
+                document.getElementById('checkInMessage').value = '';
+            } else { alert('Error: ' + (data.error || 'Unknown error')); }
+        } catch (err) { alert('Connection error'); }
+    }
+    
+    async function shareLocation() {
+        const token = getToken();
+        const building = document.getElementById('locationName').value;
+        if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+        navigator.geolocation.getCurrentPosition(async (position) => {
             try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/auth/login`, {
+                const res = await fetch(`${API_BASE}/emergency/location`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ coordinates: [position.coords.longitude, position.coords.latitude], building: building || 'Current Location' })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.data));
+                    alert('✅ Location shared with campus security!');
+                    closeModal('locationModal');
+                    document.getElementById('locationName').value = '';
+                } else { alert('Error: ' + (data.error || 'Unknown error')); }
+            } catch (err) { alert('Connection error'); }
+        }, () => { alert('Unable to get your location'); });
+    }
+    
+    async function addEmergencyContact() {
+        const token = getToken();
+        const name = document.getElementById('contactName').value;
+        const phone = document.getElementById('contactPhone').value;
+        const email = document.getElementById('contactEmail').value;
+        const relationship = document.getElementById('contactRelationship').value;
+        if (!name || !phone) { alert('Name and phone number are required'); return; }
+        try {
+            const res = await fetch(`${API_BASE}/emergency/contacts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ name, phone, email, relationship })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('✅ Contact added successfully!');
+                closeModal('addContactModal');
+                loadContacts();
+                document.getElementById('contactName').value = '';
+                document.getElementById('contactPhone').value = '';
+                document.getElementById('contactEmail').value = '';
+            } else { alert('Error: ' + (data.error || 'Unknown error')); }
+        } catch (err) { alert('Connection error'); }
+    }
+    
+    function startAutoRefresh() {
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            fetchBroadcasts();
+            loadActiveEmergencies();
+        }, 10000);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatInput = document.getElementById('aiChatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendAIMessage();
+                }
+            });
+        }
+    });
+    
+    async function checkSession() {
+        const token = getToken();
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE}/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
                     document.getElementById('userName').innerText = data.data.name || 'Student';
                     showDashboard();
                     loadAllData();
                     startAutoRefresh();
-                } else {
-                    document.getElementById('loginError').innerText = data.error;
-                }
-            } catch (err) {
-                document.getElementById('loginError').innerText = 'Connection error';
-            }
-        }
-        
-        async function register() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            if (password.length < 6) {
-                document.getElementById('registerError').innerText = 'Password must be at least 6 characters';
-                return;
-            }
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, role: 'student' })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('Registration successful! Please login.');
-                    showLogin();
-                } else {
-                    document.getElementById('registerError').innerText = data.error;
-                }
-            } catch (err) {
-                document.getElementById('registerError').innerText = 'Connection error';
-            }
-        }
-        
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            document.getElementById('dashboardPage').classList.add('hidden');
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('registerPage').classList.add('hidden');
-            if (refreshInterval) clearInterval(refreshInterval);
-        }
-        
-        function showDashboard() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('dashboardPage').classList.remove('hidden');
-            updateTime();
-            setInterval(updateTime, 1000);
-        }
-        
-        function showLogin() {
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('registerPage').classList.add('hidden');
-            document.getElementById('loginError').innerText = '';
-        }
-        
-        function showRegister() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.remove('hidden');
-            document.getElementById('registerError').innerText = '';
-        }
-        
-        function updateTime() {
-            const el = document.getElementById('currentTime');
-            if (el) el.innerText = new Date().toLocaleTimeString();
-        }
-        
-        // ============ BROADCAST FUNCTIONS ============
-        async function fetchBroadcasts() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                console.log('📡 Fetching broadcasts...');
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/broadcasts`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const result = await res.json();
-                console.log('Broadcasts response:', result);
-                if (result.success) {
-                    broadcasts = result.data;
-                    displayBroadcasts(broadcasts);
-                    updateUnreadCount(result.unreadCount);
-                }
-            } catch (err) {
-                console.error('Broadcast error:', err);
-            }
-        }
-        
-        function displayBroadcasts(list) {
-            const container = document.getElementById('broadcastsList');
-            if (!list || list.length === 0) {
-                container.innerHTML = '<div class="empty-broadcasts"><i class="fas fa-inbox"></i><p>No announcements at this time</p></div>';
-                return;
-            }
-            container.innerHTML = list.map(b => `
-                <div class="broadcast-card ${b.isRead ? 'read' : 'unread'} ${b.priority}" onclick="markBroadcastRead('${b._id}', this)">
-                    <div class="broadcast-header">
-                        <span class="broadcast-title">${escapeHtml(b.title)}${!b.isRead ? '<span class="unread-indicator"></span>' : ''}</span>
-                        <span class="broadcast-priority">${b.priority.toUpperCase()}</span>
-                    </div>
-                    <div class="broadcast-message">${escapeHtml(b.message)}</div>
-                    <div class="broadcast-time"><i class="far fa-clock"></i> ${formatTime(b.createdAt)} • ${escapeHtml(b.author) || 'Admin'}</div>
-                </div>
-            `).join('');
-        }
-        
-        async function markBroadcastRead(id, element) {
-            const token = getToken();
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/broadcasts/${id}/read`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const result = await res.json();
-                if (result.success) {
-                    element.classList.remove('unread');
-                    element.classList.add('read');
-                    const indicator = element.querySelector('.unread-indicator');
-                    if (indicator) indicator.remove();
-                    const broadcast = broadcasts.find(b => b._id === id);
-                    if (broadcast) broadcast.isRead = true;
-                    const newCount = broadcasts.filter(b => !b.isRead).length;
-                    updateUnreadCount(newCount);
-                }
-            } catch (err) { console.error(err); }
-        }
-        
-        function updateUnreadCount(count) {
-            const badge = document.getElementById('unreadCount');
-            if (badge) {
-                badge.textContent = count;
-                badge.style.display = count > 0 ? 'inline-block' : 'none';
-            }
-            document.title = count > 0 ? `(${count}) At the Den` : 'At the Den';
-        }
-        
-        function formatTime(timestamp) {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diffMins = Math.floor((now - date) / 60000);
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins} min ago`;
-            if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hour${Math.floor(diffMins / 60) > 1 ? 's' : ''} ago`;
-            return date.toLocaleDateString();
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-        
-        // ============ AI CHAT WIDGET FUNCTIONS ============
-        function toggleAIChat() {
-            const chatWindow = document.getElementById('aiChatWindow');
-            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
-                chatWindow.style.display = 'flex';
-            } else {
-                chatWindow.style.display = 'none';
-            }
-        }
-        
-        function triggerImageUpload() {
-            document.getElementById('aiImageInput').click();
-        }
-        
-        async function processImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const previewArea = document.getElementById('imagePreviewArea');
-                previewArea.style.display = 'block';
-                previewArea.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${e.target.result}" class="image-preview">
-                        <span>Image ready to send</span>
-                        <button onclick="clearImage()" style="margin-left: auto; background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">✕</button>
-                    </div>
-                `;
-                currentImageData = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        function clearImage() {
-            currentImageData = null;
-            document.getElementById('imagePreviewArea').style.display = 'none';
-            document.getElementById('imagePreviewArea').innerHTML = '';
-            document.getElementById('aiImageInput').value = '';
-        }
-        
-        function triggerVoiceInput() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'en-US';
-                recognition.interimResults = false;
-                
-                recognition.onstart = function() {
-                    showToast('🎤 Listening... Speak now');
-                };
-                
-                recognition.onresult = function(event) {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById('aiChatInput').value = transcript;
-                    sendAIMessage();
-                };
-                
-                recognition.onerror = function(event) {
-                    showToast('Voice recognition error. Please try again.');
-                };
-                
-                recognition.start();
-            } else {
-                showToast('Voice input not supported in this browser');
-            }
-        }
-        
-        // ============ CORRECTED AI SEND FUNCTION ============
-        async function sendAIMessage() {
-            const input = document.getElementById('aiChatInput');
-            const message = input.value.trim();
-            
-            if (!message && !currentImageData) {
-                showToast('Please enter a message or upload an image');
-                return;
-            }
-            
-            // Add user message to chat
-            const chatMessages = document.getElementById('aiChatMessages');
-            const userMessageDiv = document.createElement('div');
-            userMessageDiv.className = 'user-message';
-            
-            let userContent = `<div>`;
-            if (message) {
-                userContent += `${escapeHtml(message)}`;
-            }
-            if (currentImageData) {
-                userContent += `<br><img src="${currentImageData}" style="max-width: 150px; border-radius: 8px; margin-top: 5px;">`;
-            }
-            userContent += `</div>`;
-            userMessageDiv.innerHTML = userContent;
-            chatMessages.appendChild(userMessageDiv);
-            
-            // Clear input and image
-            input.value = '';
-            const imageToSend = currentImageData;
-            clearImage();
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Add typing indicator
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'typing-indicator';
-            typingDiv.innerHTML = '<span></span><span></span><span></span>';
-            typingDiv.id = 'typingIndicator';
-            chatMessages.appendChild(typingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            try {
-                const token = getToken();
-                
-                // Prepare request body
-                const requestBody = { 
-                    message: message || "What's in this image?" 
-                };
-                
-                // Add image if present
-                if (imageToSend) {
-                    requestBody.image = imageToSend;
-                }
-                
-                console.log('📤 Sending to AI:', { message: requestBody.message, hasImage: !!imageToSend });
-                
-                const response = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/ai/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                const data = await response.json();
-                console.log('📥 AI Response:', data);
-                
-                // Remove typing indicator
-                document.getElementById('typingIndicator')?.remove();
-                
-                // Add AI response
-                const aiMessageDiv = document.createElement('div');
-                aiMessageDiv.className = 'ai-message';
-                
-                let aiResponseText = "I'm here to help!";
-                
-                if (data.response) {
-                    aiResponseText = data.response;
-                } else if (data.data?.message) {
-                    aiResponseText = data.data.message;
-                } else if (data.message) {
-                    aiResponseText = data.message;
-                } else {
-                    aiResponseText = "Please ask me about emergency procedures, safety protocols, or anything else you'd like to know!";
-                }
-                
-                aiMessageDiv.innerHTML = `
-                    <div>
-                        <i class="fas fa-robot"></i> ${escapeHtml(aiResponseText)}
-                    </div>
-                `;
-                chatMessages.appendChild(aiMessageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                
-            } catch (error) {
-                console.error('❌ AI Error:', error);
-                document.getElementById('typingIndicator')?.remove();
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'ai-message';
-                errorDiv.innerHTML = `
-                    <div style="background: var(--danger);">
-                        <i class="fas fa-exclamation-triangle"></i> Sorry, I'm having trouble connecting. Please try again.
-                    </div>
-                `;
-                chatMessages.appendChild(errorDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }
-        
-        // ============ LOAD DATA ============
-        async function loadAllData() {
-            await fetchBroadcasts();
-            await loadActiveEmergencies();
-            await loadContacts();
-            await loadMyCheckIns();
-        }
-        
-        async function refreshAllData() {
-            await loadAllData();
-            showToast('Data refreshed!');
-        }
-        
-        async function loadActiveEmergencies() {
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/active`);
-                const data = await res.json();
-                const container = document.getElementById('activeEmergencies');
-                if (data.success && data.data && data.data.length > 0) {
-                    container.innerHTML = data.data.map(e => `
-                        <div class="emergency-item">
-                            <strong>🚨 ${e.type.toUpperCase()} Emergency</strong><br>
-                            📍 ${e.location?.name || 'Unknown'}<br>
-                            🕐 ${new Date(e.createdAt).toLocaleString()}<br>
-                            ${e.description || ''}
-                        </div>
-                    `).join('');
-                    const banner = document.getElementById('statusBanner');
-                    banner.className = 'status-banner danger';
-                    banner.innerHTML = `<div><h2><i class="fas fa-exclamation-triangle"></i> ACTIVE EMERGENCY</h2><p>Follow safety protocols</p></div><div>Updated: ${new Date().toLocaleTimeString()}</div>`;
-                } else {
-                    container.innerHTML = '<p>✅ No active emergencies. Campus is secure.</p>';
-                    document.getElementById('statusBanner').className = 'status-banner';
-                }
-            } catch (err) { console.error(err); }
-        }
-        
-        async function loadContacts() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/contacts`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                const container = document.getElementById('contactsList');
-                if (data.success && data.data && data.data.length > 0) {
-                    container.innerHTML = data.data.map(c => `
-                        <div class="contact-card">
-                            <strong>${escapeHtml(c.name)}</strong><br>
-                            📞 ${c.phone}<br>
-                            ${c.relationship ? `👤 ${c.relationship}` : ''}<br>
-                            <a href="tel:${c.phone}" style="color: var(--primary); text-decoration: none;">📱 Call Now</a>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p>No contacts saved. Use "Add Contact" above.</p>';
-                }
-            } catch (err) { console.error(err); }
-        }
-        
-        async function loadMyCheckIns() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/checkins/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-                const container = document.getElementById('checkInsList');
-                if (data.success && data.data && data.data.length > 0) {
-                    container.innerHTML = data.data.map(c => `
-                        <div class="checkin-item">
-                            <div>${c.status === 'safe' ? '✅' : c.status === 'help-needed' ? '🆘' : '🚶'}</div>
-                            <div>
-                                <strong>${c.status === 'safe' ? 'Safe' : c.status === 'help-needed' ? 'Need Help' : 'Evacuated'}</strong><br>
-                                📍 ${c.location?.name || 'Unknown'}<br>
-                                ${c.message ? `📝 ${c.message}<br>` : ''}
-                                <small>${new Date(c.createdAt).toLocaleString()}</small>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p>No check-ins yet. Use "Check-In Safe" above.</p>';
-                }
-            } catch (err) { console.error(err); }
-        }
-        
-        // ============ MODAL FUNCTIONS ============
-        function openReportEmergency() { openModal('reportModal'); }
-        function openCheckIn() { openModal('checkInModal'); }
-        function openShareLocation() { openModal('locationModal'); }
-        function openAddContact() { openModal('addContactModal'); }
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
-        // ============ API ACTIONS ============
-        async function submitEmergency() {
-            const token = getToken();
-            const type = document.getElementById('emergencyType').value;
-            const location = document.getElementById('emergencyLocation').value;
-            const description = document.getElementById('emergencyDescription').value;
-            if (!location) { alert('Please enter a location'); return; }
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/report`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ type, location: { name: location }, description, severity: 'high' })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ Emergency reported successfully!');
-                    closeModal('reportModal');
-                    loadActiveEmergencies();
-                    document.getElementById('emergencyLocation').value = '';
-                    document.getElementById('emergencyDescription').value = '';
-                } else { alert('Error: ' + (data.error || 'Unknown error')); }
-            } catch (err) { alert('Connection error'); }
-        }
-        
-        async function submitCheckIn() {
-            const token = getToken();
-            const status = document.getElementById('checkInStatus').value;
-            const location = document.getElementById('checkInLocation').value;
-            const message = document.getElementById('checkInMessage').value;
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/checkin`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ status, location: { name: location || 'Unknown' }, message })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ Check-in successful!');
-                    closeModal('checkInModal');
-                    loadMyCheckIns();
-                    document.getElementById('checkInLocation').value = '';
-                    document.getElementById('checkInMessage').value = '';
-                } else { alert('Error: ' + (data.error || 'Unknown error')); }
-            } catch (err) { alert('Connection error'); }
-        }
-        
-        async function shareLocation() {
-            const token = getToken();
-            const building = document.getElementById('locationName').value;
-            if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                try {
-                    const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/location`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ coordinates: [position.coords.longitude, position.coords.latitude], building: building || 'Current Location' })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        alert('✅ Location shared with campus security!');
-                        closeModal('locationModal');
-                        document.getElementById('locationName').value = '';
-                    } else { alert('Error: ' + (data.error || 'Unknown error')); }
-                } catch (err) { alert('Connection error'); }
-            }, () => { alert('Unable to get your location'); });
-        }
-        
-        async function addEmergencyContact() {
-            const token = getToken();
-            const name = document.getElementById('contactName').value;
-            const phone = document.getElementById('contactPhone').value;
-            const email = document.getElementById('contactEmail').value;
-            const relationship = document.getElementById('contactRelationship').value;
-            if (!name || !phone) { alert('Name and phone number are required'); return; }
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/emergency/contacts`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ name, phone, email, relationship })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ Contact added successfully!');
-                    closeModal('addContactModal');
-                    loadContacts();
-                    document.getElementById('contactName').value = '';
-                    document.getElementById('contactPhone').value = '';
-                    document.getElementById('contactEmail').value = '';
-                } else { alert('Error: ' + (data.error || 'Unknown error')); }
-            } catch (err) { alert('Connection error'); }
-        }
-        
-        function startAutoRefresh() {
-            if (refreshInterval) clearInterval(refreshInterval);
-            refreshInterval = setInterval(() => {
-                fetchBroadcasts();
-                loadActiveEmergencies();
-            }, 10000);
-        }
-        
-        // Add Enter key support for AI chat
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatInput = document.getElementById('aiChatInput');
-            if (chatInput) {
-                chatInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        sendAIMessage();
-                    }
-                });
-            }
-        });
-        
-        // Check existing session on page load
-        async function checkSession() {
-            const token = getToken();
-            if (!token) return;
-            try {
-                const res = await fetch(`${https://at-the-den-alert.onrender.com/https://at-the-den-alert.onrender.com/api/auth}/auth/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.success) {
-                        document.getElementById('userName').innerText = data.data.name || 'Student';
-                        showDashboard();
-                        loadAllData();
-                        startAutoRefresh();
-                    } else { logout(); }
                 } else { logout(); }
-            } catch (err) { logout(); }
-        }
-        
-        // Initialize
-        checkSession();
-    </script>
+            } else { logout(); }
+        } catch (err) { logout(); }
+    }
+    
+    checkSession();
+</script>
 </body>
 </html>
