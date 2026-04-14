@@ -233,60 +233,49 @@
     </div>
 
     <script>
-        const API_URL = 'https://at-the-den-alert.onrender.com/api';
+        const API_URL = 'https://at-the-den-alert.onrender.com';
 
-       // Login form submission
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-    const autoLoginError = document.getElementById('autoLoginFailed');
-    
-    errorDiv.style.display = 'none';
-    if (autoLoginError) autoLoginError.style.display = 'none';
-    
-    // DEBUG: Log what we're trying to do
-    console.log('=== LOGIN ATTEMPT ===');
-    console.log('Email:', email);
-    console.log('API_URL:', API_URL);
-    console.log('Full URL:', `${API_URL}/auth/login`);
-    
-    try {
-        console.log('Sending fetch request...');
-        const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const autoLoginError = document.getElementById('autoLoginFailed');
+            
+            errorDiv.style.display = 'none';
+            if (autoLoginError) autoLoginError.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Save token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data));
+                    
+                    // Redirect based on role
+                    if (data.data.role === 'admin' || data.data.role === 'staff') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed. Please check your credentials.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+                errorDiv.style.display = 'block';
+            }
         });
-        
-        console.log('Response status:', response.status);
-        console.log('Response OK?', response.ok);
-        
-        const data = await response.json();
-        console.log('Response data:', data);
-        
-        if (data.success) {
-            console.log('Login successful!');
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.data));
-            window.location.href = 'student-dashboard.html';
-        } else {
-            console.log('Login failed:', data.error);
-            errorDiv.textContent = data.error || 'Login failed';
-            errorDiv.style.display = 'block';
-        }
-    } catch (error) {
-        console.error('=== FETCH ERROR ===');
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Full error:', error);
-        
-        errorDiv.textContent = `Connection error: ${error.message}. Make sure the server is running.`;
-        errorDiv.style.display = 'block';
-    }
-});
 
         // Register form submission
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
