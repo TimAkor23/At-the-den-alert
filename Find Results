@@ -1,0 +1,876 @@
+Searching 4273 files for "medical" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  554              <select id="emergencyType">
+  555                  <option value="fire">🔥 Fire</option>
+  556:                 <option value="medical">🏥 Medical</option>
+  557                  <option value="lockdown">🔒 Lockdown</option>
+  558                  <option value="weather">🌩️ Weather</option>
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  553      
+  554      <!-- MODALS -->
+  555:     <div id="reportModal" class="modal-overlay"><div class="modal"><h2>Report Emergency</h2><select id="emergencyType"><option value="fire">🔥 Fire</option><option value="medical">🏥 Medical</option><option value="lockdown">🔒 Lockdown</option><option value="weather">🌩️ Weather</option></select><input id="emergencyLocation" placeholder="Location (Building/Room)"><textarea id="emergencyDescription" rows="3" placeholder="Describe what's happening..."></textarea><button onclick=... <skipped 131 characters> ...
+  556      
+  557      <div id="checkInModal" class="modal-overlay"><div class="modal"><h2>Check-In Safe</h2><select id="checkInStatus"><option value="safe">✅ I am Safe</option><option value="help-needed">🆘 I Need Help</option><option value="evacuated">🚶 I Have Evacuated</option></select><input id="checkInLocation" placeholder="Your Location"><textarea id="checkInMessage" rows="2" placeholder="Optional message..."></textarea><button onclick="submitCheckIn()">Check In</button><button class="danger" onclick="closeModal('checkInModal')">Cancel</button></div></div>
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\adminController.js:
+  222      
+  223      // Count by type
+  224:     const types = ['fire', 'lockdown', 'medical', 'weather', 'active-threat', 'other'];
+  225      for (const type of types) {
+  226        stats.byType[type] = await Emergency.countDocuments({ type });
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\aiChatController.js:
+   18      fire: { name: "Fire Emergency", steps: ["Activate alarm", "Evacuate", "Call 911"] },
+   19      lockdown: { name: "Lockdown", steps: ["Lock doors", "Stay quiet", "Wait for all-clear"] },
+   20:     medical: { name: "Medical Emergency", steps: ["Call 911", "Provide first aid", "Stay calm"] }
+   21    };
+   22  }
+   ..
+   58  - Provide real-time guidance during emergencies
+   59  - Answer questions about safety protocols
+   60: - Never give medical advice (always direct to professionals)
+   61  - Be calm, clear, and authoritative
+   62  
+   ..
+  162  - If you see fire, smoke, weapons, injuries, or other emergencies - state this clearly
+  163  - If the image shows normal campus activity, reassure the user
+  164: - Never diagnose injuries - always direct to medical professionals
+  165  - Be concise but thorough
+  166          `;
+  ...
+  226        return res.status(404).json({
+  227          success: false,
+  228:         error: 'Protocol not found. Available types: fire, lockdown, medical, weather'
+  229        });
+  230      }
+  ...
+  307    }
+  308    
+  309:   if (lowerMsg.includes('medical')) {
+  310      return "🏥 **Medical Emergency Protocol:**\n\n1. Call 911 for life-threatening emergencies\n2. Call Health Services: 484-365-6196\n3. Do NOT move the person unless they're in danger\n4. Provide first aid only if trained\n5. Clear the area and wait for help\n\nFor mental health crisis, call 988.";
+  311    }
+  ...
+  327    }
+  328    
+  329:   return "👋 Hi! I'm your AI safety assistant. I can help you with:\n\n• **Emergency protocols** (fire, lockdown, medical)\n• **Safety questions**\n• **Image analysis** (upload a photo to check for dangers)\n• **Check-in and location sharing**\n\nTry asking: 'What's the fire protocol?' or upload an image for analysis!\n\n⚠️ **For immediate emergencies, always use the Report Emergency button or call 911.**";
+  330  }
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\aiController.js:
+   10      }
+   11      // Medical-related questions
+   12:     else if (lowerMessage.includes('medical') || lowerMessage.includes('injury') || lowerMessage.includes('hurt') || lowerMessage.includes('bleeding')) {
+   13          return "🏥 **MEDICAL EMERGENCY PROTOCOL**\n\n1. Call campus health center: 555-0123\n2. For emergencies, call 911 immediately\n3. Do not move the injured person unless in immediate danger\n4. Apply pressure to bleeding wounds\n5. Stay with the person until help arrives\n6. Provide first aid only if you are trained\n\n📍 Health Center Location: Wellness Center Building, Room 101";
+   14      }
+   ..
+   47      // Welcome/greeting
+   48      else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey') || lowerMessage.includes('help')) {
+   49: <skipped 157 characters> ...emergency response\n🔒 **Lockdown** - Active threat procedures\n⛈️ **Weather** - Severe weather safety\n✅ **Check-in** - How to mark yourself safe\n📍 **Location** - Sharing your location\n📞 **Contacts** - Emergency phone numbers\n🚪 **Evacuation** - Assembly points and routes\n🩺 **First Aid** - Basic medical guidance\n\nWhat would you like to know about campus safety?";
+   50      }
+   51      // Report emergency
+
+C:\Users\takor\Documents\at-the-den-backend\knowledge-base\emergency-protocols.json:
+   32      ]
+   33    },
+   34:   "medical": {
+   35      "name": "Medical Emergency",
+   36      "steps": [
+   ..
+   40        "Check for responsiveness and breathing",
+   41        "Provide first aid only if properly trained",
+   42:       "Clear the area and wait for medical professionals"
+   43      ],
+   44      "doNot": [
+
+C:\Users\takor\Documents\at-the-den-backend\models\Emergency.js:
+    4    type: {
+    5      type: String,
+    6:     enum: ['fire', 'medical', 'lockdown', 'weather', 'active-threat', 'test', 'other'],
+    7      required: [true, 'Emergency type is required']
+    8    },
+
+C:\Users\takor\Documents\at-the-den-backend\models\EmergencyContact.js:
+   42    type: {
+   43      type: String,
+   44:     enum: ['personal', 'campus-security', 'medical', 'public-safety', 'student-safety', 'facilities'],
+   45      default: 'personal'
+   46    },
+
+C:\Users\takor\Documents\at-the-den-backend\routes\aiRoutes.js:
+   12  
+   13  However, you have SPECIAL EXPERTISE in:
+   14: - Emergency procedures (fire, lockdown, medical, weather, active threats)
+   15  - Safety protocols on campus
+   16  - First aid instructions
+   ..
+   88      fire: "🔥 FIRE EMERGENCY:\n1) Pull the nearest alarm\n2) Evacuate immediately\n3) Don't use elevators\n4) Assemble at the football field\n5) Call 911 then campus security",
+   89      lockdown: "🔒 LOCKDOWN PROCEDURE:\n1) Lock all doors/windows\n2) Turn off lights\n3) Move out of sight\n4) Silence phones\n5) Wait for official all-clear",
+   90:     medical: "🏥 MEDICAL EMERGENCY:\n1) Call 911\n2) Contact campus nurse at ext. 555\n3) Don't move the person unless in danger\n4) Apply pressure to bleeding\n5) Stay with them until help arrives",
+   91      weather: "🌩️ SEVERE WEATHER:\n1) Move to interior room\n2) Stay away from windows\n3) Don't use electronics\n4) Wait for official all-clear\n5) Check emergency alerts"
+   92    };
+
+C:\Users\takor\Documents\at-the-den-backend\scripts\seedContacts.js:
+   19    {
+   20      name: 'Health Services',
+   21:     relationship: 'doctor',  // Changed from 'medical' to 'doctor' (valid enum)
+   22      phone: '484-365-6196',
+   23      email: 'healthservices@lincoln.edu',
+   ..
+   25      notifyOnEmergency: true,
+   26      isPublic: true,
+   27:     type: 'medical',
+   28      organization: 'Student Health Services',
+   29      priority: 2,
+
+19 matches across 10 files
+
+
+
+
+
+Searching 4273 files for "medical" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  554              <select id="emergencyType">
+  555                  <option value="fire">🔥 Fire</option>
+  556:                 <option value="medical">🏥 Medical</option>
+  557                  <option value="lockdown">🔒 Lockdown</option>
+  558                  <option value="weather">🌩️ Weather</option>
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  553      
+  554      <!-- MODALS -->
+  555:     <div id="reportModal" class="modal-overlay"><div class="modal"><h2>Report Emergency</h2><select id="emergencyType"><option value="fire">🔥 Fire</option><option value="medical">🏥 Medical</option><option value="lockdown">🔒 Lockdown</option><option value="weather">🌩️ Weather</option></select><input id="emergencyLocation" placeholder="Location (Building/Room)"><textarea id="emergencyDescription" rows="3" placeholder="Describe what's happening..."></textarea><button onclick=... <skipped 131 characters> ...
+  556      
+  557      <div id="checkInModal" class="modal-overlay"><div class="modal"><h2>Check-In Safe</h2><select id="checkInStatus"><option value="safe">✅ I am Safe</option><option value="help-needed">🆘 I Need Help</option><option value="evacuated">🚶 I Have Evacuated</option></select><input id="checkInLocation" placeholder="Your Location"><textarea id="checkInMessage" rows="2" placeholder="Optional message..."></textarea><button onclick="submitCheckIn()">Check In</button><button class="danger" onclick="closeModal('checkInModal')">Cancel</button></div></div>
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\adminController.js:
+  222      
+  223      // Count by type
+  224:     const types = ['fire', 'lockdown', 'medical', 'weather', 'active-threat', 'other'];
+  225      for (const type of types) {
+  226        stats.byType[type] = await Emergency.countDocuments({ type });
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\aiChatController.js:
+   18      fire: { name: "Fire Emergency", steps: ["Activate alarm", "Evacuate", "Call 911"] },
+   19      lockdown: { name: "Lockdown", steps: ["Lock doors", "Stay quiet", "Wait for all-clear"] },
+   20:     medical: { name: "Medical Emergency", steps: ["Call 911", "Provide first aid", "Stay calm"] }
+   21    };
+   22  }
+   ..
+   58  - Provide real-time guidance during emergencies
+   59  - Answer questions about safety protocols
+   60: - Never give medical advice (always direct to professionals)
+   61  - Be calm, clear, and authoritative
+   62  
+   ..
+  162  - If you see fire, smoke, weapons, injuries, or other emergencies - state this clearly
+  163  - If the image shows normal campus activity, reassure the user
+  164: - Never diagnose injuries - always direct to medical professionals
+  165  - Be concise but thorough
+  166          `;
+  ...
+  226        return res.status(404).json({
+  227          success: false,
+  228:         error: 'Protocol not found. Available types: fire, lockdown, medical, weather'
+  229        });
+  230      }
+  ...
+  307    }
+  308    
+  309:   if (lowerMsg.includes('medical')) {
+  310      return "🏥 **Medical Emergency Protocol:**\n\n1. Call 911 for life-threatening emergencies\n2. Call Health Services: 484-365-6196\n3. Do NOT move the person unless they're in danger\n4. Provide first aid only if trained\n5. Clear the area and wait for help\n\nFor mental health crisis, call 988.";
+  311    }
+  ...
+  327    }
+  328    
+  329:   return "👋 Hi! I'm your AI safety assistant. I can help you with:\n\n• **Emergency protocols** (fire, lockdown, medical)\n• **Safety questions**\n• **Image analysis** (upload a photo to check for dangers)\n• **Check-in and location sharing**\n\nTry asking: 'What's the fire protocol?' or upload an image for analysis!\n\n⚠️ **For immediate emergencies, always use the Report Emergency button or call 911.**";
+  330  }
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\aiController.js:
+   10      }
+   11      // Medical-related questions
+   12:     else if (lowerMessage.includes('medical') || lowerMessage.includes('injury') || lowerMessage.includes('hurt') || lowerMessage.includes('bleeding')) {
+   13          return "🏥 **MEDICAL EMERGENCY PROTOCOL**\n\n1. Call campus health center: 555-0123\n2. For emergencies, call 911 immediately\n3. Do not move the injured person unless in immediate danger\n4. Apply pressure to bleeding wounds\n5. Stay with the person until help arrives\n6. Provide first aid only if you are trained\n\n📍 Health Center Location: Wellness Center Building, Room 101";
+   14      }
+   ..
+   47      // Welcome/greeting
+   48      else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey') || lowerMessage.includes('help')) {
+   49: <skipped 157 characters> ...emergency response\n🔒 **Lockdown** - Active threat procedures\n⛈️ **Weather** - Severe weather safety\n✅ **Check-in** - How to mark yourself safe\n📍 **Location** - Sharing your location\n📞 **Contacts** - Emergency phone numbers\n🚪 **Evacuation** - Assembly points and routes\n🩺 **First Aid** - Basic medical guidance\n\nWhat would you like to know about campus safety?";
+   50      }
+   51      // Report emergency
+
+C:\Users\takor\Documents\at-the-den-backend\knowledge-base\emergency-protocols.json:
+   32      ]
+   33    },
+   34:   "medical": {
+   35      "name": "Medical Emergency",
+   36      "steps": [
+   ..
+   40        "Check for responsiveness and breathing",
+   41        "Provide first aid only if properly trained",
+   42:       "Clear the area and wait for medical professionals"
+   43      ],
+   44      "doNot": [
+
+C:\Users\takor\Documents\at-the-den-backend\models\Emergency.js:
+    4    type: {
+    5      type: String,
+    6:     enum: ['fire', 'medical', 'lockdown', 'weather', 'active-threat', 'test', 'other'],
+    7      required: [true, 'Emergency type is required']
+    8    },
+
+C:\Users\takor\Documents\at-the-den-backend\models\EmergencyContact.js:
+   42    type: {
+   43      type: String,
+   44:     enum: ['personal', 'campus-security', 'medical', 'public-safety', 'student-safety', 'facilities'],
+   45      default: 'personal'
+   46    },
+
+C:\Users\takor\Documents\at-the-den-backend\routes\aiRoutes.js:
+   12  
+   13  However, you have SPECIAL EXPERTISE in:
+   14: - Emergency procedures (fire, lockdown, medical, weather, active threats)
+   15  - Safety protocols on campus
+   16  - First aid instructions
+   ..
+   88      fire: "🔥 FIRE EMERGENCY:\n1) Pull the nearest alarm\n2) Evacuate immediately\n3) Don't use elevators\n4) Assemble at the football field\n5) Call 911 then campus security",
+   89      lockdown: "🔒 LOCKDOWN PROCEDURE:\n1) Lock all doors/windows\n2) Turn off lights\n3) Move out of sight\n4) Silence phones\n5) Wait for official all-clear",
+   90:     medical: "🏥 MEDICAL EMERGENCY:\n1) Call 911\n2) Contact campus nurse at ext. 555\n3) Don't move the person unless in danger\n4) Apply pressure to bleeding\n5) Stay with them until help arrives",
+   91      weather: "🌩️ SEVERE WEATHER:\n1) Move to interior room\n2) Stay away from windows\n3) Don't use electronics\n4) Wait for official all-clear\n5) Check emergency alerts"
+   92    };
+
+C:\Users\takor\Documents\at-the-den-backend\scripts\seedContacts.js:
+   19    {
+   20      name: 'Health Services',
+   21:     relationship: 'doctor',  // Changed from 'medical' to 'doctor' (valid enum)
+   22      phone: '484-365-6196',
+   23      email: 'healthservices@lincoln.edu',
+   ..
+   25      notifyOnEmergency: true,
+   26      isPublic: true,
+   27:     type: 'medical',
+   28      organization: 'Student Health Services',
+   29      priority: 2,
+
+19 matches across 10 files
+
+Searching 4273 files for "555" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+   24              --gray-dark: #343a40;
+   25              --text-dark: #222;
+   26:             --text-light: #555;
+   27              --bg-light: #f7f7f7;
+   28              --white: #fff;
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+   49              margin-bottom: 8px;
+   50              font-weight: 600;
+   51:             color: #555;
+   52          }
+   53  
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+   23              --gray: #6c757d;
+   24              --text-dark: #222;
+   25:             --text-light: #555;
+   26              --bg-light: #f0f2f5;
+   27              --white: #fff;
+   ..
+  541                  <div class="protocol-card"><h3><i class="fas fa-fire"></i> Fire Emergency</h3><ol class="protocol-steps"><li>Activate alarm</li><li>Evacuate</li><li>Assemble at field</li></ol></div>
+  542                  <div class="protocol-card"><h3><i class="fas fa-lock"></i> Lockdown</h3><ol class="protocol-steps"><li>Lock doors</li><li>Move out of sight</li><li>Silence devices</li></ol></div>
+  543:                 <div class="protocol-card"><h3><i class="fas fa-heart-pulse"></i> Medical</h3><ol class="protocol-steps"><li>Call nurse (ext. 555)</li><li>Administer first aid</li><li>Await help</li></ol></div>
+  544              </div>
+  545              
+
+C:\Users\takor\Documents\at-the-den-backend\controllers\aiController.js:
+    7      // Fire-related questions
+    8      if (lowerMessage.includes('fire') || lowerMessage.includes('smoke') || lowerMessage.includes('burn')) {
+    9:         return "🔥 **FIRE EMERGENCY PROTOCOL**\n\n1. Activate the nearest fire alarm immediately\n2. Evacuate using designated exits - DO NOT use elevators\n3. Stay low to avoid smoke inhalation\n4. Assemble at the football field evacuation point\n5. Call 911 and campus security at 555-0199\n6. Do not re-enter the building until cleared by authorities\n\n⚠️ If you are trapped: seal doors with wet cloths, call 911, and signal from windows.";
+   10      }
+   11      // Medical-related questions
+   12      else if (lowerMessage.includes('medical') || lowerMessage.includes('injury') || lowerMessage.includes('hurt') || lowerMessage.includes('bleeding')) {
+   13:         return "🏥 **MEDICAL EMERGENCY PROTOCOL**\n\n1. Call campus health center: 555-0123\n2. For emergencies, call 911 immediately\n3. Do not move the injured person unless in immediate danger\n4. Apply pressure to bleeding wounds\n5. Stay with the person until help arrives\n6. Provide first aid only if you are trained\n\n📍 Health Center Location: Wellness Center Building, Room 101";
+   14      }
+   15      // Lockdown-related questions
+   16      else if (lowerMessage.includes('lockdown') || lowerMessage.includes('active shooter') || lowerMessage.includes('threat')) {
+   17: <skipped 107 characters> ... Know your exits\n- Leave belongings behind\n\n**HIDE:**\n- If not safe, lock doors, barricade entry\n- Turn off lights, silence devices\n- Stay away from windows\n- Stay quiet\n\n**FIGHT:**\n- As last resort, defend yourself\n- Use improvised weapons\n- Commit to your actions\n\n📞 Campus Security: 555-0199 | Emergency: 911";
+   18      }
+   19      // Weather-related questions
+   ..
+   31      // Emergency contacts question
+   32      else if (lowerMessage.includes('contact') || lowerMessage.includes('phone number') || lowerMessage.includes('call')) {
+   33:         return "📞 **EMERGENCY CONTACTS**\n\n**Public Safety:**\n• 🚓 Campus Security: 555-0199\n• 👮 University Police: 555-0111\n• 🏥 Health Center: 555-0123\n• 🚑 Emergency: 911\n\n**To add personal contacts:**\nClick 'Add Contact' on your dashboard to save parents, doctors, or friends for quick access during emergencies.";
+   34      }
+   35      // Evacuation question
+   ..
+   39      // First aid question
+   40      else if (lowerMessage.includes('first aid') || lowerMessage.includes('cpr') || lowerMessage.includes('help someone')) {
+   41:         return "🩺 **FIRST AID GUIDANCE**\n\n**Before helping:**\n• Ensure the scene is safe\n• Call for help (911 or 555-0123)\n• Get consent if possible\n\n**Basic Steps:**\n• **Bleeding**: Apply firm pressure with clean cloth\n• **Burns**: Cool with running water for 10-15 minutes\n• **Choking**: Perform Heimlich maneuver\n• **Unconscious**: Check breathing, start CPR if trained\n\n⚠️ Only provide care you're trained to give!";
+   42      }
+   43      // Mental health question
+   44      else if (lowerMessage.includes('stress') || lowerMessage.includes('anxiety') || lowerMessage.includes('mental')) {
+   45:         return "🧠 **MENTAL HEALTH SUPPORT**\n\nYou're not alone. Help is available:\n\n📞 **Campus Resources:**\n• Counseling Center: 555-0134\n• 24/7 Crisis Line: 555-0199\n\n🌙 **After Hours:**\n• National Suicide Prevention: 988\n• Crisis Text Line: Text HOME to 741741\n\n📍 Counseling Center: Student Union Building, 2nd Floor\n\nIt's okay to ask for help. Your wellbeing matters.";
+   46      }
+   47      // Welcome/greeting
+   ..
+   51      // Report emergency
+   52      else if (lowerMessage.includes('report') && lowerMessage.includes('emergency')) {
+   53: <skipped 31 characters> ...RT AN EMERGENCY**\n\n**Via Dashboard:**\n1. Click the 'Report Emergency' button\n2. Select the emergency type:\n   • 🔥 Fire\n   • 🏥 Medical\n   • 🔒 Lockdown\n   • ⛈️ Weather\n3. Enter your exact location\n4. Describe what's happening\n5. Click 'Report Emergency'\n\n**By Phone:**\n• Campus Security: 555-0199\n• Emergency: 911\n\n⚠️ If this is an active emergency, use the button NOW!";
+   54      }
+   55      // Default response
+   ..
+   96              success: true,
+   97              data: {
+   98:                 analysis: "📸 **Image Analysis**\n\nThank you for sharing this image.\n\nIf this shows an emergency situation:\n• Use the **Report Emergency** button immediately\n• Call Campus Security at 555-0199\n• Call 911 for life-threatening emergencies\n\nFor safety guidance, please describe what you see in text and I can help.\n\n⚠️ Remember: In an emergency, reporting quickly saves lives!"
+   99              }
+  100          });
+
+C:\Users\takor\Documents\at-the-den-backend\node_modules\kareem\coverage\lcov-report\base.css:
+   59    font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+   60    font-size: 10px;
+   61:   color: #555;
+   62    background: #E8E8E8;
+   63    padding: 4px 5px;
+
+C:\Users\takor\Documents\at-the-den-backend\node_modules\object-inspect\test\err.js:
+    7      t.plan(1);
+    8      var aerr = new TypeError();
+    9:     aerr.foo = 555;
+   10      aerr.bar = [1, 2, 3];
+   11  
+   12      var berr = new TypeError('tuv');
+   13:     berr.baz = 555;
+   14  
+   15      var cerr = new SyntaxError();
+   ..
+   38          '[TypeError]',
+   39          '[TypeError: xxx]',
+   40:         '{ [TypeError] foo: 555, bar: [ 1, 2, 3 ] }',
+   41:         '{ [TypeError: tuv] baz: 555 }',
+   42          '{ [SyntaxError: whoa] message: \'whoa\', \'a-b\': 5 }',
+   43          'cause' in Error.prototype ? '[Error: foo]' : '{ [Error: foo] [cause]: \'bar\' }',
+
+C:\Users\takor\Documents\at-the-den-backend\node_modules\to-regex-range\README.md:
+   49  * regex for matching `1` through `50` => `/([1-9]|[1-4][0-9]|50)/` (uh-oh...)
+   50  * regex for matching `1` through `55` => `/([1-9]|[1-4][0-9]|5[0-5])/` (no prob, I can do this...)
+   51: * regex for matching `1` through `555` => `/([1-9]|[1-9][0-9]|[1-4][0-9]{2}|5[0-4][0-9]|55[0-5])/` (maybe not...)
+   52: * regex for matching `0001` through `5555` => `/(0{3}[1-9]|0{2}[1-9][0-9]|0[1-9][0-9]{2}|[1-4][0-9]{3}|5[0-4][0-9]{2}|55[0-4][0-9]|555[0-5])/` (okay, I get the point!)
+   53  
+   54  The numbers are contrived, but they're also really basic. In the real world you might need to generate a regex on-the-fly for validation.
+   ..
+  171  | `toRegexRange(-100, 100)`   | `-[1-9]\|-?[1-9][0-9]\|-?100\|[0-9]`                                            | _42μs_           |
+  172  | `toRegexRange(001, 100)`    | `0{0,2}[1-9]\|0?[1-9][0-9]\|100`                                                | _109μs_          |
+  173: | `toRegexRange(001, 555)`    | `0{0,2}[1-9]\|0?[1-9][0-9]\|[1-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]`                | _51μs_           |
+  174  | `toRegexRange(0010, 1000)`  | `0{0,2}1[0-9]\|0{0,2}[2-9][0-9]\|0?[1-9][0-9]{2}\|1000`                         | _31μs_           |
+  175  | `toRegexRange(1, 50)`       | `[1-9]\|[1-4][0-9]\|50`                                                         | _24μs_           |
+  176  | `toRegexRange(1, 55)`       | `[1-9]\|[1-4][0-9]\|5[0-5]`                                                     | _23μs_           |
+  177: | `toRegexRange(1, 555)`      | `[1-9]\|[1-9][0-9]\|[1-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]`                        | _30μs_           |
+  178: | `toRegexRange(1, 5555)`     | `[1-9]\|[1-9][0-9]{1,2}\|[1-4][0-9]{3}\|5[0-4][0-9]{2}\|55[0-4][0-9]\|555[0-5]` | _43μs_           |
+  179: | `toRegexRange(111, 555)`    | `11[1-9]\|1[2-9][0-9]\|[2-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]`                     | _38μs_           |
+  180  | `toRegexRange(29, 51)`      | `29\|[34][0-9]\|5[01]`                                                          | _24μs_           |
+  181  | `toRegexRange(31, 877)`     | `3[1-9]\|[4-9][0-9]\|[1-7][0-9]{2}\|8[0-6][0-9]\|87[0-7]`                       | _32μs_           |
+
+C:\Users\takor\Documents\at-the-den-backend\node_modules\tr46\lib\mappingTable.json:
+    1: <skipped 3676 characters> ...525,2],[526,1,"ȏ"],[527,2],[528,1,"ȑ"],[529,2],[530,1,"ȓ"],[531,2],[532,1,"ȕ"],[533,2],[534,1,"ȗ"],[535,2],[536,1,"ș"],[537,2],[538,1,"ț"],[539,2],[540,1,"ȝ"],[541,2],[542,1,"ȟ"],[543,2],[544,1,"ƞ"],[545,2],[546,1,"ȣ"],[547,2],[548,1,"ȥ"],[549,2],[550,1,"ȧ"],[551,2],[552,1,"ȩ"],[553,2],[554,1,"ȫ"],[555,2],[556,1,"ȭ"],[557,2],[558,1,"ȯ"],[559,2],[560,1,"ȱ"],[561,2],[562,1,"ȳ"],[563,2],[[564,566],2],[[567,569],2],[570,1,"ⱥ"],[571,1,"ȼ"],[572,2],[573,1,"ƚ"],[574,1,"ⱦ"],[[575,576],2],[577,1,"ɂ"],[578,2],[579,1,"ƀ"],[580,1,"ʉ"],[581,1,"ʌ"],[582,1,"ɇ"],[583,2],[584,1,"ɉ"],[585,2],[586,1,"ɋ"],[587,2],[5... <skipped 127902 characters> ...
+
+C:\Users\takor\Documents\at-the-den-backend\routes\aiRoutes.js:
+   88      fire: "🔥 FIRE EMERGENCY:\n1) Pull the nearest alarm\n2) Evacuate immediately\n3) Don't use elevators\n4) Assemble at the football field\n5) Call 911 then campus security",
+   89      lockdown: "🔒 LOCKDOWN PROCEDURE:\n1) Lock all doors/windows\n2) Turn off lights\n3) Move out of sight\n4) Silence phones\n5) Wait for official all-clear",
+   90:     medical: "🏥 MEDICAL EMERGENCY:\n1) Call 911\n2) Contact campus nurse at ext. 555\n3) Don't move the person unless in danger\n4) Apply pressure to bleeding\n5) Stay with them until help arrives",
+   91      weather: "🌩️ SEVERE WEATHER:\n1) Move to interior room\n2) Stay away from windows\n3) Don't use electronics\n4) Wait for official all-clear\n5) Check emergency alerts"
+   92    };
+
+28 matches across 9 files
+
+
+Searching 34 files for "const API_BASE = 'http://localhost:5000/api';" (case sensitive, whole word)
+
+0 matches
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\admin-dashboard.html:
+  522      
+  523      <script>
+  524:         const API_BASE = 'http://localhost:5000/api';
+  525          let refreshInterval;
+  526          
+
+C:\Users\takor\Documents\at-the-den-backend\admin-login.html:
+   95      
+   96      <script>
+   97:         const API_BASE = 'http://localhost:5000/api';
+   98          
+   99          async function adminLogin() {
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  616      
+  617      <script>
+  618:         const API_BASE = 'http://localhost:5000/api';
+  619          let currentUser = null;
+  620          
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  234  
+  235      <script>
+  236:         const API_URL = 'http://localhost:5000/api';
+  237  
+  238          // Login form submission
+  ...
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+9 matches across 8 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\admin-dashboard.html:
+  522      
+  523      <script>
+  524:         const API_BASE = 'http://localhost:5000/api';
+  525          let refreshInterval;
+  526          
+
+C:\Users\takor\Documents\at-the-den-backend\admin-login.html:
+   95      
+   96      <script>
+   97:         const API_BASE = 'http://localhost:5000/api';
+   98          
+   99          async function adminLogin() {
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  616      
+  617      <script>
+  618:         const API_BASE = 'http://localhost:5000/api';
+  619          let currentUser = null;
+  620          
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  234  
+  235      <script>
+  236:         const API_URL = 'http://localhost:5000/api';
+  237  
+  238          // Login form submission
+  ...
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+9 matches across 8 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\admin-dashboard.html:
+  522      
+  523      <script>
+  524:         const API_BASE = 'const API_BASE = 'http://localhost:5000/api';';
+  525          let refreshInterval;
+  526          
+
+C:\Users\takor\Documents\at-the-den-backend\admin-login.html:
+   95      
+   96      <script>
+   97:         const API_BASE = 'http://localhost:5000/api';
+   98          
+   99          async function adminLogin() {
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  616      
+  617      <script>
+  618:         const API_BASE = 'http://localhost:5000/api';
+  619          let currentUser = null;
+  620          
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  234  
+  235      <script>
+  236:         const API_URL = 'http://localhost:5000/api';
+  237  
+  238          // Login form submission
+  ...
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+9 matches across 8 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\admin-login.html:
+   95      
+   96      <script>
+   97:         const API_BASE = 'http://localhost:5000/api';
+   98          
+   99          async function adminLogin() {
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  616      
+  617      <script>
+  618:         const API_BASE = 'http://localhost:5000/api';
+  619          let currentUser = null;
+  620          
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  234  
+  235      <script>
+  236:         const API_URL = 'http://localhost:5000/api';
+  237  
+  238          // Login form submission
+  ...
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+8 matches across 7 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\dashboard.html:
+  616      
+  617      <script>
+  618:         const API_BASE = 'http://localhost:5000/api';
+  619          let currentUser = null;
+  620          
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  234  
+  235      <script>
+  236:         const API_URL = 'http://localhost:5000/api';
+  237  
+  238          // Login form submission
+  ...
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+7 matches across 6 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  234  
+  235      <script>
+  236:         const API_URL = 'http://localhost:5000/api';
+  237  
+  238          // Login form submission
+  ...
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+6 matches across 5 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+5 matches across 5 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\student-dashboard.html:
+  611      
+  612      <script>
+  613:         const API_BASE = 'http://localhost:5000/api';
+  614          let refreshInterval;
+  615          let broadcasts = [];
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+5 matches across 5 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'http://localhost:5000/api';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+4 matches across 4 files
+
+
+Searching 34 files for "5000" (case sensitive, whole word)
+
+C:\Users\takor\Documents\at-the-den-backend\login.html:
+  273                  }
+  274              } catch (error) {
+  275:                 errorDiv.textContent = 'Connection error. Make sure the server is running on port 5000.';
+  276                  errorDiv.style.display = 'block';
+  277              }
+
+C:\Users\takor\Documents\at-the-den-backend\register.html:
+  141  
+  142      <script>
+  143:         const API_URL = 'https://at-the-den-alert.onrender.com';
+  144  
+  145          document.getElementById('registerForm').addEventListener('submit', async (e) => {
+
+C:\Users\takor\Documents\at-the-den-backend\server.js:
+  200  // ============================================
+  201  
+  202: const PORT = process.env.PORT || 5000;
+  203  app.listen(PORT, () => {
+  204    console.log(`\n🚀 Server running on port ${PORT}`);
+
+C:\Users\takor\Documents\at-the-den-backend\.env:
+    1: PORT=5000 
+    2  MONGODB_URI=mongodb://localhost:27017/at-the-den  JWT_SECRET=your-super-secret-key-change-this-123 
+    3  GEMINI_API_KEY=AIzaSyAhM9oJ6K8qWCf9LlzhKfVQhxLhBZQISTU 
+
+4 matches across 4 files
