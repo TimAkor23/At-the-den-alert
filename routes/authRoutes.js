@@ -2,7 +2,7 @@
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');  // ✅ ADDED - for password hashing
-const User = require('../models/User');
+const User = require('../models/user');
 
 // Test route
 router.get('/test', (req, res) => {

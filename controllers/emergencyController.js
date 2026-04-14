@@ -1,5 +1,5 @@
 const Emergency = require('../models/Emergency');
-const User = require('../models/User');
+const User = require('../models/user');
 const CheckIn = require('../models/CheckIn');
 const Location = require('../models/Location');
 const EmergencyContact = require('../models/EmergencyContact');
